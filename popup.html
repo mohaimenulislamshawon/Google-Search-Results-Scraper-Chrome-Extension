@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Search Scraper</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 350px;
+      min-height: 400px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 15px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .status-box {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .status-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-label {
+      color: #666;
+    }
+
+    .status-value {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .status-value.running {
+      color: #28a745;
+    }
+
+    .status-value.stopped {
+      color: #dc3545;
+    }
+
+    .status-value.idle {
+      color: #6c757d;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 10px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+    }
+
+    .btn-start:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-stop {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+    }
+
+    .btn-stop:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+    }
+
+    .btn-copy {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-copy:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-clear {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-clear:hover:not(:disabled) {
+      background: #5a6268;
+    }
+
+    .progress-container {
+      margin: 15px 0;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e9ecef;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .log-container {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 15px;
+    }
+
+    .log-entry {
+      font-family: 'Consolas', monospace;
+      font-size: 11px;
+      color: #00ff00;
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+
+    .log-entry.error {
+      color: #ff6b6b;
+    }
+
+    .log-entry.info {
+      color: #69b3ff;
+    }
+
+    .settings {
+      margin-bottom: 15px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .setting-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .setting-input {
+      width: 80px;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      color: #856404;
+      display: none;
+    }
+
+    .warning.show {
+      display: block;
+    }
+
+    .copied-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .copied-toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Google Search Scraper</h1>
+    
+    <div class="warning" id="warning">
+      Please navigate to a Google search results page first!
+    </div>
+
+    <div class="status-box">
+      <div class="status-row">
+        <span class="status-label">Status:</span>
+        <span class="status-value idle" id="status">Idle</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Pages Scraped:</span>
+        <span class="status-value" id="pageCount">0</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Total Characters:</span>
+        <span class="status-value" id="charCount">0</span>
+      </div>
+    </div>
+
+    <div class="settings">
+      <div class="setting-row">
+        <span class="setting-label">Delay between pages (ms):</span>
+        <input type="number" class="setting-input" id="delayInput" value="2000" min="500" max="10000">
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Max pages to scrape:</span>
+        <input type="number" class="setting-input" id="maxPagesInput" value="10" min="1" max="100">
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-start" id="startBtn">▶ Start Scraping</button>
+    <button class="btn btn-stop" id="stopBtn" disabled>⏹ Stop</button>
+    <button class="btn btn-copy" id="copyBtn" disabled>📋 Copy All Data</button>
+    <button class="btn btn-clear" id="clearBtn">🗑 Clear Data</button>
+
+    <div class="log-container" id="logContainer">
+      <div class="log-entry info">Ready to scrape...</div>
+    </div>
+  </div>
+
+  <div class="copied-toast" id="copiedToast">✓ Copied to clipboard!</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
